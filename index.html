@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confidence Inventory — Authority Assessment</title>
+  <meta name="description" content="A self-assessment of Confidence, Leadership, Enjoyment, Gratitude and Discipline across the key areas of your life." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <span class="brand">Confidence Inventory</span>
+      <span class="brand-sub">Your Authority Assessment</span>
+    </div>
+  </header>
+
+  <main class="wrap" id="app">
+    <!-- ============ INTRO ============ -->
+    <section id="screen-intro" class="screen active">
+      <h1>Where does your authority stand?</h1>
+      <p class="lede">
+        Confidence and composure are a function of <strong>authority</strong> — and authority grows
+        from five capacities: <strong>Confidence, Leadership, Enjoyment, Gratitude</strong> and
+        <strong>Discipline</strong>. This inventory measures each of them across the seven areas
+        that make up a life.
+      </p>
+
+      <div class="pillars-grid" aria-hidden="true">
+        <div class="pill-card"><span class="pill-name">Confidence</span><span class="pill-desc">I can handle what comes</span></div>
+        <div class="pill-card"><span class="pill-name">Leadership</span><span class="pill-desc">I set the direction</span></div>
+        <div class="pill-card"><span class="pill-name">Enjoyment</span><span class="pill-desc">I'm at ease here</span></div>
+        <div class="pill-card"><span class="pill-name">Gratitude</span><span class="pill-desc">I appreciate what I have</span></div>
+        <div class="pill-card"><span class="pill-name">Discipline</span><span class="pill-desc">I follow through</span></div>
+      </div>
+
+      <div class="how">
+        <h2>How it works</h2>
+        <ul>
+          <li><strong>35 quick ratings</strong> — 5 statements for each of 7 life areas. About 8–10 minutes.</li>
+          <li>Rate each statement <strong>1 (not true of me) to 10 (completely true of me)</strong>.</li>
+          <li>Answer for how things <em>actually</em> are — not how you think they should be. It's private; nothing is sent anywhere.</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="btn-start">Begin assessment</button>
+        <button class="btn btn-ghost hidden" id="btn-resume">Resume where I left off</button>
+      </div>
+      <p class="fine">Your answers are stored only in this browser. Nothing leaves your device.</p>
+    </section>
+
+    <!-- ============ SURVEY ============ -->
+    <section id="screen-survey" class="screen">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text"><span id="progress-step">1</span> of 7 · <span id="progress-name">Finance</span></div>
+      </div>
+
+      <div id="domain-block"></div>
+
+      <div class="actions survey-actions">
+        <button class="btn btn-ghost" id="btn-back">Back</button>
+        <button class="btn btn-primary" id="btn-next">Next</button>
+      </div>
+      <p class="fine" id="survey-hint">Rate all five to continue.</p>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="screen-results" class="screen">
+      <div id="results-content"><!-- rendered by JS --></div>
+      <div class="actions no-print">
+        <button class="btn btn-primary" id="btn-print">Save / print as PDF</button>
+        <button class="btn btn-ghost" id="btn-export">Export data (JSON)</button>
+        <button class="btn btn-ghost" id="btn-retake">Retake</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer no-print">
+    <div class="wrap">
+      <p>Confidence Inventory · a private self-assessment. Not a clinical or diagnostic instrument.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
