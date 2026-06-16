@@ -1,7 +1,12 @@
 /* ===========================================================================
    Confidence Inventory — Authority Assessment
    Authority = Confidence + Leadership + Enjoyment + Gratitude + Discipline,
-   measured across 7 life domains. 5 x 7 = 35 items, rated 1–10.
+   measured across 7 life domains.
+
+   Questions are deliberately INDIRECT: concrete, behavioral statements that
+   reveal authority without ever naming the capacity. Each statement is tagged
+   (under the hood) to one of the five capacities so the wheel, capacity bars,
+   and domain × capacity heatmap still work. ~12 statements per domain.
    Dependency-free: all rendering (including the radar wheel) is hand-rolled.
    =========================================================================== */
 
@@ -13,90 +18,140 @@ const PILLARS = [
   { id: 'discipline', name: 'Discipline', blurb: 'consistent follow-through' },
 ];
 
+// Each item: { t: statement shown to the user, c: capacity it secretly measures }
 const DOMAINS = [
   {
     id: 'finance', name: 'Finance', icon: '💰',
-    intro: 'How you feel about and manage your money and resources.',
-    items: {
-      confidence: "I'm confident I can handle whatever financial situations come my way.",
-      leadership: "I actively set the direction of my finances rather than reacting to whatever happens.",
-      enjoyment:  "I feel at ease — even a sense of enjoyment — when dealing with my money.",
-      gratitude:  "I feel genuinely grateful for the financial resources I have.",
-      discipline: "I consistently stick to the money habits (saving, budgeting, paying on time) that keep me healthy.",
-    },
+    intro: 'How you handle and relate to your money and resources.',
+    items: [
+      { t: "I don't lie awake worrying about money.", c: 'confidence' },
+      { t: "I know exactly what I owe and what I own.", c: 'leadership' },
+      { t: "I pay my bills on time without scrambling.", c: 'discipline' },
+      { t: "I live comfortably within my means.", c: 'discipline' },
+      { t: "I have enough set aside to handle an unexpected expense.", c: 'confidence' },
+      { t: "I make spending decisions deliberately, not impulsively.", c: 'discipline' },
+      { t: "My beliefs about money are my own, not inherited from someone else.", c: 'leadership' },
+      { t: "I'm on a path that will give me the financial life I want.", c: 'leadership' },
+      { t: "Money is one factor in my decisions, not the thing that runs them.", c: 'confidence' },
+      { t: "I feel genuinely thankful for what I'm able to afford and provide.", c: 'gratitude' },
+      { t: "Dealing with my finances feels manageable — not something I dread.", c: 'enjoyment' },
+      { t: "I have no money secrets I'm hiding or ashamed of.", c: 'confidence' },
+    ],
   },
   {
     id: 'social', name: 'Social & Relationships', icon: '🤝',
     intro: 'Family, friends, partner, and your wider social world.',
-    items: {
-      confidence: "I'm confident in my ability to build and keep the relationships I want.",
-      leadership: "I take initiative in my relationships rather than waiting for others to reach out.",
-      enjoyment:  "I genuinely enjoy the time I spend with the people in my life.",
-      gratitude:  "I feel deeply grateful for the people around me.",
-      discipline: "I consistently invest time and attention in my key relationships, even when I'm busy.",
-    },
+    items: [
+      { t: "I reach out and make plans rather than waiting to be invited.", c: 'leadership' },
+      { t: "When there's tension with someone, I address it instead of letting it fester.", c: 'confidence' },
+      { t: "The people close to me know they can count on me.", c: 'discipline' },
+      { t: "I look forward to time with the people in my life.", c: 'enjoyment' },
+      { t: "I have people I can turn to when things get hard.", c: 'confidence' },
+      { t: "I keep in touch with the people who matter, even when life is busy.", c: 'discipline' },
+      { t: "I can be myself around the people closest to me.", c: 'confidence' },
+      { t: "I feel genuinely lucky to have the people I have.", c: 'gratitude' },
+      { t: "I set the tone in my relationships rather than just going along.", c: 'leadership' },
+      { t: "I can say no to plans that drain me without feeling guilty.", c: 'leadership' },
+      { t: "Time with friends and family energizes me rather than wearing me out.", c: 'enjoyment' },
+      { t: "I make a point of telling people I appreciate them.", c: 'gratitude' },
+    ],
   },
   {
     id: 'health', name: 'Physical & Mental Health', icon: '🧠',
     intro: 'Your body, your energy, and your mental wellbeing.',
-    items: {
-      confidence: "I'm confident in my ability to take care of my body and mind.",
-      leadership: "I take ownership of my health rather than leaving it to chance.",
-      enjoyment:  "I enjoy the activities that keep me physically and mentally well.",
-      gratitude:  "I feel grateful for my body and my mental wellbeing.",
-      discipline: "I consistently follow the routines (sleep, movement, nutrition, recovery) that keep me well.",
-    },
+    items: [
+      { t: "I get enough sleep to feel rested most days.", c: 'discipline' },
+      { t: "I move my body regularly, not just when I feel like it.", c: 'discipline' },
+      { t: "When I'm stressed, I have ways of coping that actually work.", c: 'confidence' },
+      { t: "I trust my body to carry me through what I ask of it.", c: 'confidence' },
+      { t: "I take care of small health issues before they become big ones.", c: 'leadership' },
+      { t: "I actually enjoy the things I do to stay healthy.", c: 'enjoyment' },
+      { t: "I decide what goes into my body rather than eating on autopilot.", c: 'leadership' },
+      { t: "I'm grateful for what my body lets me do.", c: 'gratitude' },
+      { t: "I make time for rest and recovery without feeling guilty.", c: 'discipline' },
+      { t: "I feel steady and clear-headed most of the time.", c: 'confidence' },
+      { t: "I'd rather prevent problems with my health than react to them.", c: 'leadership' },
+      { t: "I feel good in my own skin.", c: 'enjoyment' },
+    ],
   },
   {
     id: 'environment', name: 'Environment', icon: '🏡',
     intro: 'The spaces you live and work in — home, office, car.',
-    items: {
-      confidence: "I'm confident I can create and maintain spaces that work for me.",
-      leadership: "I intentionally shape my environment rather than tolerating whatever it becomes.",
-      enjoyment:  "I genuinely enjoy spending time in my home, workspace, and car.",
-      gratitude:  "I feel grateful for the spaces I get to live and work in.",
-      discipline: "I consistently keep my spaces organized and in order.",
-    },
+    items: [
+      { t: "My home is set up the way I want it, not just how it ended up.", c: 'leadership' },
+      { t: "I can find what I need when I need it.", c: 'discipline' },
+      { t: "My spaces feel calm and welcoming to me.", c: 'enjoyment' },
+      { t: "I deal with clutter and repairs before they pile up.", c: 'discipline' },
+      { t: "I'm comfortable having people over without a panic to clean up.", c: 'confidence' },
+      { t: "I've made my spaces feel like mine.", c: 'leadership' },
+      { t: "I keep my car, desk, and home in reasonable order without much effort.", c: 'discipline' },
+      { t: "I genuinely enjoy spending time in my own space.", c: 'enjoyment' },
+      { t: "I feel grateful for the places I get to live and work in.", c: 'gratitude' },
+      { t: "My environment supports what I'm doing rather than getting in the way.", c: 'confidence' },
+      { t: "If something breaks, I'm confident I can get it handled.", c: 'confidence' },
+      { t: "I appreciate the comfort and security my spaces give me.", c: 'gratitude' },
+    ],
   },
   {
     id: 'appearance', name: 'Appearance', icon: '✨',
     intro: 'How you present yourself and feel about how you look.',
-    items: {
-      confidence: "I feel confident in how I present myself and look.",
-      leadership: "I make deliberate choices about my appearance rather than defaulting or neglecting it.",
-      enjoyment:  "I enjoy taking care of and presenting my appearance.",
-      gratitude:  "I feel grateful for how I'm able to look and present myself.",
-      discipline: "I consistently maintain the grooming and self-care habits I value.",
-    },
+    items: [
+      { t: "I make deliberate choices about how I present myself.", c: 'leadership' },
+      { t: "I feel comfortable in what I wear.", c: 'enjoyment' },
+      { t: "I keep up the grooming and self-care habits that matter to me.", c: 'discipline' },
+      { t: "I feel good about how I look without needing others to confirm it.", c: 'confidence' },
+      { t: "I dress for myself, not just to meet others' expectations.", c: 'leadership' },
+      { t: "I take care of my appearance consistently, not just for special occasions.", c: 'discipline' },
+      { t: "I'm at ease with how I look in photos and mirrors.", c: 'confidence' },
+      { t: "I appreciate the things I like about my appearance.", c: 'gratitude' },
+      { t: "Getting ready is something I enjoy rather than endure.", c: 'enjoyment' },
+      { t: "I present myself the way I want to be seen.", c: 'leadership' },
+      { t: "I invest the time and effort my appearance deserves.", c: 'discipline' },
+      { t: "I'm thankful for the features and health that let me look my best.", c: 'gratitude' },
+    ],
   },
   {
     id: 'spiritual', name: 'Spiritual', icon: '🕊️',
     intro: 'Meaning, purpose, faith, and your inner life.',
-    items: {
-      confidence: "I feel grounded and confident in my sense of meaning or purpose.",
-      leadership: "I actively cultivate my spiritual or inner life rather than ignoring it.",
-      enjoyment:  "I find genuine fulfillment in my spiritual or reflective practices.",
-      gratitude:  "I feel a deep sense of gratitude for life and for what's bigger than me.",
-      discipline: "I consistently make time for what nourishes me spiritually (prayer, meditation, reflection, nature).",
-    },
+    items: [
+      { t: "I have a clear sense of what gives my life meaning.", c: 'confidence' },
+      { t: "I make regular time for reflection, prayer, or stillness.", c: 'discipline' },
+      { t: "My sense of purpose holds up even when things get hard.", c: 'confidence' },
+      { t: "I actively tend to my inner life rather than ignoring it.", c: 'leadership' },
+      { t: "I find genuine peace in my spiritual or reflective practices.", c: 'enjoyment' },
+      { t: "I live in line with my values, not just talk about them.", c: 'discipline' },
+      { t: "I feel a deep gratitude for being alive.", c: 'gratitude' },
+      { t: "I've thought through what I believe rather than inheriting it unquestioned.", c: 'leadership' },
+      { t: "I feel connected to something larger than myself.", c: 'confidence' },
+      { t: "Quiet, reflective time feels nourishing — not boring or pointless.", c: 'enjoyment' },
+      { t: "I make space for what feeds me spiritually even when life is busy.", c: 'discipline' },
+      { t: "I regularly notice and appreciate the good in my life.", c: 'gratitude' },
+    ],
   },
   {
     id: 'time', name: 'Time Management', icon: '⏳',
     intro: 'How you direct your hours, attention, and priorities.',
-    items: {
-      confidence: "I'm confident in my ability to manage my time and priorities.",
-      leadership: "I proactively direct how I spend my time rather than letting it get away from me.",
-      enjoyment:  "I feel a sense of ease and satisfaction with how I use my time.",
-      gratitude:  "I feel grateful for how I'm able to spend my days.",
-      discipline: "I consistently follow through on my plans and protect my priorities.",
-    },
+    items: [
+      { t: "I decide how my day goes rather than letting it happen to me.", c: 'leadership' },
+      { t: "I follow through on what I plan to do.", c: 'discipline' },
+      { t: "I protect time for what matters most to me.", c: 'discipline' },
+      { t: "I rarely feel rushed or behind.", c: 'confidence' },
+      { t: "I can say no to things that don't fit my priorities.", c: 'leadership' },
+      { t: "I trust myself to get done what needs to get done.", c: 'confidence' },
+      { t: "I spend my time in line with what I actually value.", c: 'leadership' },
+      { t: "I make time for things I enjoy, not just obligations.", c: 'enjoyment' },
+      { t: "I feel satisfied with how I spent my time at the end of most days.", c: 'enjoyment' },
+      { t: "I handle interruptions and surprises without losing the day.", c: 'confidence' },
+      { t: "I'm grateful for the freedom I have over my own time.", c: 'gratitude' },
+      { t: "I keep my commitments to myself, not just to others.", c: 'discipline' },
+    ],
   },
 ];
 
-const STORAGE_KEY = 'confidence-inventory-v1';
+const STORAGE_KEY = 'confidence-inventory-v2';
 
 /* ---------- State ---------- */
-let responses = {}; // responses[domainId][pillarId] = 1..10
+let responses = {}; // responses[domainId][itemIndex] = 1..10
 let stepIndex = 0;
 
 /* ---------- Persistence ---------- */
@@ -138,17 +193,16 @@ function renderStep() {
     <p class="domain-intro">${domain.intro}</p>
   `;
 
-  PILLARS.forEach(p => {
-    const current = responses[domain.id][p.id];
+  domain.items.forEach((it, i) => {
+    const current = responses[domain.id][i];
     let scaleBtns = '';
     for (let n = 1; n <= 10; n++) {
       const sel = current === n ? ' selected' : '';
-      scaleBtns += `<button type="button" class="scale-btn${sel}" data-domain="${domain.id}" data-pillar="${p.id}" data-value="${n}" aria-label="${n} out of 10">${n}</button>`;
+      scaleBtns += `<button type="button" class="scale-btn${sel}" data-domain="${domain.id}" data-idx="${i}" data-value="${n}" aria-label="${n} out of 10">${n}</button>`;
     }
     html += `
       <div class="q">
-        <span class="q-pillar">${p.name}</span>
-        <p class="q-text">${domain.items[p.id]}</p>
+        <p class="q-text">${it.t}</p>
         <div class="scale">${scaleBtns}</div>
         <div class="scale-legend"><span>1 · Not true of me</span><span>Completely true · 10</span></div>
       </div>
@@ -159,8 +213,8 @@ function renderStep() {
 
   block.querySelectorAll('.scale-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const d = btn.dataset.domain, pi = btn.dataset.pillar, v = parseInt(btn.dataset.value, 10);
-      responses[d][pi] = v;
+      const d = btn.dataset.domain, idx = parseInt(btn.dataset.idx, 10), v = parseInt(btn.dataset.value, 10);
+      responses[d][idx] = v;
       // update selection within this question's scale
       btn.parentElement.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
@@ -182,7 +236,7 @@ function renderStep() {
 function stepComplete(i) {
   const d = DOMAINS[i];
   const r = responses[d.id] || {};
-  return PILLARS.every(p => typeof r[p.id] === 'number');
+  return d.items.every((_, idx) => typeof r[idx] === 'number');
 }
 
 function updateSurveyNav() {
@@ -193,32 +247,42 @@ function updateSurveyNav() {
 
 /* ---------- Scoring ---------- */
 function computeScores() {
-  const domainScores = {}; // mean across 5 pillars
-  const pillarScores = {}; // mean across 7 domains
-  PILLARS.forEach(p => pillarScores[p.id] = 0);
+  const domainScores = {}; // mean across the domain's items
+  const pillarSum = {}, pillarCount = {};
+  PILLARS.forEach(p => { pillarSum[p.id] = 0; pillarCount[p.id] = 0; });
 
+  let total = 0, totalCount = 0;
   DOMAINS.forEach(d => {
     let sum = 0;
-    PILLARS.forEach(p => {
-      const v = responses[d.id][p.id];
+    d.items.forEach((it, i) => {
+      const v = responses[d.id][i];
       sum += v;
-      pillarScores[p.id] += v;
+      total += v; totalCount++;
+      pillarSum[it.c] += v; pillarCount[it.c]++;
     });
-    domainScores[d.id] = sum / PILLARS.length;
+    domainScores[d.id] = sum / d.items.length;
   });
-  PILLARS.forEach(p => pillarScores[p.id] = pillarScores[p.id] / DOMAINS.length);
 
-  let total = 0;
-  DOMAINS.forEach(d => PILLARS.forEach(p => total += responses[d.id][p.id]));
-  const composite = total / (DOMAINS.length * PILLARS.length);
+  const pillarScores = {};
+  PILLARS.forEach(p => pillarScores[p.id] = pillarCount[p.id] ? pillarSum[p.id] / pillarCount[p.id] : 0);
+  const composite = total / totalCount;
 
   return { domainScores, pillarScores, composite };
+}
+
+// Average of one domain's items that are tagged to a given capacity (null if none).
+function cellAverage(domain, capacityId) {
+  let sum = 0, n = 0;
+  domain.items.forEach((it, i) => {
+    if (it.c === capacityId) { sum += responses[domain.id][i]; n++; }
+  });
+  return n ? sum / n : null;
 }
 
 function band(score) {
   if (score >= 8.5) return { label: 'Commanding', desc: 'You carry deep authority across your life. The work now is protecting it and lifting your lowest areas to match.' };
   if (score >= 7)   return { label: 'Grounded',   desc: 'You operate from real composure most of the time. A few targeted areas are holding back your full authority.' };
-  if (score >= 5.5) return { label: 'Building',    desc: 'A solid foundation with clear room to grow. Focus on your lowest pillar and lowest domain first — they compound.' };
+  if (score >= 5.5) return { label: 'Building',    desc: 'A solid foundation with clear room to grow. Focus on your lowest capacity and lowest domain first — they compound.' };
   if (score >= 4)   return { label: 'Emerging',    desc: 'Your authority is uneven. Pick one area and one capacity to strengthen this month; momentum builds fast from here.' };
   return { label: 'Foundational', desc: 'This is a starting line, not a verdict. Choose a single area to stabilize first — small wins rebuild confidence quickly.' };
 }
@@ -286,7 +350,7 @@ function radarSVG(domainScores) {
 }
 
 /* ---------- Heatmap ---------- */
-function heatmapHTML() {
+function heatmapHTML(scores) {
   let head = '<tr><th class="corner"></th>';
   PILLARS.forEach(p => head += `<th>${p.name}</th>`);
   head += '<th>Avg</th></tr>';
@@ -294,22 +358,20 @@ function heatmapHTML() {
   let rows = '';
   DOMAINS.forEach(d => {
     let row = `<tr><th class="row-h">${d.icon} ${d.name}</th>`;
-    let sum = 0;
     PILLARS.forEach(p => {
-      const v = responses[d.id][p.id];
-      sum += v;
-      row += `<td style="background:${scoreColor(v)}">${v}</td>`;
+      const v = cellAverage(d, p.id);
+      if (v === null) row += `<td class="na">—</td>`;
+      else row += `<td style="background:${scoreColor(v)}">${v.toFixed(1)}</td>`;
     });
-    const avg = sum / PILLARS.length;
+    const avg = scores.domainScores[d.id];
     row += `<td style="background:${scoreColor(avg)}">${avg.toFixed(1)}</td></tr>`;
     rows += row;
   });
 
-  // pillar averages footer
+  // capacity averages footer
   let foot = '<tr><th class="row-h">Average</th>';
   PILLARS.forEach(p => {
-    let s = 0; DOMAINS.forEach(d => s += responses[d.id][p.id]);
-    const avg = s / DOMAINS.length;
+    const avg = scores.pillarScores[p.id];
     foot += `<td style="background:${scoreColor(avg)}">${avg.toFixed(1)}</td>`;
   });
   foot += '<td class="corner"></td></tr>';
@@ -322,12 +384,12 @@ function insights(scores) {
   const pillarsSorted = PILLARS.map(p => ({ ...p, score: scores.pillarScores[p.id] })).sort((a, b) => b.score - a.score);
   const domainsSorted = DOMAINS.map(d => ({ ...d, score: scores.domainScores[d.id] })).sort((a, b) => b.score - a.score);
 
-  // individual cells
-  const cells = [];
-  DOMAINS.forEach(d => PILLARS.forEach(p => cells.push({ d, p, v: responses[d.id][p.id] })));
-  cells.sort((a, b) => a.v - b.v);
-  const weakest = cells.slice(0, 3);
-  const strongest = cells.slice(-3).reverse();
+  // individual statements (the most actionable signal)
+  const items = [];
+  DOMAINS.forEach(d => d.items.forEach((it, i) => items.push({ d, it, v: responses[d.id][i] })));
+  items.sort((a, b) => a.v - b.v);
+  const weakest = items.slice(0, 3);
+  const strongest = items.slice(-3).reverse();
 
   const topPillar = pillarsSorted[0], lowPillar = pillarsSorted[pillarsSorted.length - 1];
   const topDomain = domainsSorted[0], lowDomain = domainsSorted[domainsSorted.length - 1];
@@ -339,7 +401,7 @@ function insights(scores) {
         <ul>
           <li>Strongest capacity: <span class="tag-strong">${topPillar.name}</span> (${topPillar.score.toFixed(1)}) — ${topPillar.blurb}.</li>
           <li>Strongest area of life: <span class="tag-strong">${topDomain.name}</span> (${topDomain.score.toFixed(1)}).</li>
-          ${strongest.map(c => `<li><span class="tag-strong">${c.v}</span> · ${c.p.name} in ${c.d.name}</li>`).join('')}
+          ${strongest.map(c => `<li><span class="tag-strong">${c.v}</span> · ${c.it.t} <em>(${c.d.name})</em></li>`).join('')}
         </ul>
       </div>
       <div class="insight">
@@ -347,15 +409,16 @@ function insights(scores) {
         <ul>
           <li>Weakest capacity: <span class="tag-weak">${lowPillar.name}</span> (${lowPillar.score.toFixed(1)}) — strengthen this and it lifts every area.</li>
           <li>Area needing most attention: <span class="tag-weak">${lowDomain.name}</span> (${lowDomain.score.toFixed(1)}).</li>
-          ${weakest.map(c => `<li><span class="tag-weak">${c.v}</span> · ${c.p.name} in ${c.d.name}</li>`).join('')}
+          ${weakest.map(c => `<li><span class="tag-weak">${c.v}</span> · ${c.it.t} <em>(${c.d.name})</em></li>`).join('')}
         </ul>
       </div>
     </div>
     <div class="card" style="margin-top:22px">
       <h3 style="margin-top:0">Where to focus first</h3>
       <p style="margin-bottom:0;color:var(--muted)">
-        The fastest gains usually come from your single lowest cell:
-        <strong style="color:var(--text)">${weakest[0].p.name} in ${weakest[0].d.name}</strong>.
+        The fastest gains usually come from your lowest-rated statement:
+        <strong style="color:var(--text)">“${weakest[0].it.t}”</strong> in
+        <strong style="color:var(--text)">${weakest[0].d.name}</strong>.
         Pair it with your weakest overall capacity — <strong style="color:var(--text)">${lowPillar.name}</strong> —
         and pick one small, repeatable action for the next two weeks. Re-take this inventory monthly to watch the wheel round out.
       </p>
@@ -386,7 +449,7 @@ function renderResults() {
     </div>
 
     <h2 class="section-title">Your wheel of life</h2>
-    <p class="section-sub">Each spoke is a life area, scored by averaging its five authority capacities. A round, full wheel means balanced authority.</p>
+    <p class="section-sub">Each spoke is a life area, scored by averaging all of its statements. A round, full wheel means balanced authority.</p>
     <div class="card radar-wrap">${radarSVG(scores.domainScores)}</div>
 
     <h2 class="section-title">Your five capacities</h2>
@@ -395,7 +458,7 @@ function renderResults() {
 
     <h2 class="section-title">The full picture</h2>
     <p class="section-sub">Every capacity × every area. Find the red cells — that's where authority leaks out.</p>
-    ${heatmapHTML()}
+    ${heatmapHTML(scores)}
 
     <h2 class="section-title">What it means</h2>
     ${insights(scores)}
@@ -406,15 +469,19 @@ function renderResults() {
 /* ---------- Export ---------- */
 function exportJSON() {
   const scores = computeScores();
+  const detail = {};
+  DOMAINS.forEach(d => {
+    detail[d.id] = d.items.map((it, i) => ({ statement: it.t, capacity: it.c, value: responses[d.id][i] }));
+  });
   const payload = {
     generated: new Date().toISOString(),
     scale: '1-10',
-    responses,
     scores: {
       composite: Number(scores.composite.toFixed(2)),
       pillars: Object.fromEntries(PILLARS.map(p => [p.id, Number(scores.pillarScores[p.id].toFixed(2))])),
       domains: Object.fromEntries(DOMAINS.map(d => [d.id, Number(scores.domainScores[d.id].toFixed(2))])),
     },
+    responses: detail,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);

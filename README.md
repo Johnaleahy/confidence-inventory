@@ -9,8 +9,12 @@ A private, browser-based self-assessment that measures the five capacities behin
 
 ## The model
 
-It's a **5 × 7 matrix**: each of the five capacities is rated inside each of the seven
-life domains, for **35 items** rated **1 (not true of me) → 10 (completely true of me)**.
+Five capacities are measured across seven life domains. Rather than asking about each
+capacity directly ("how confident are you about money?"), the inventory uses **~12 concrete,
+behavioral statements per domain** (≈84 in total) — e.g. *"I pay my bills on time without
+scrambling"* — each rated **1 (not true of me) → 10 (completely true of me)**. Every
+statement is silently **tagged to one capacity**, so the same five-capacity profile still
+falls out of the scoring without ever naming it to the participant.
 
 | | Confidence | Leadership | Enjoyment | Gratitude | Discipline |
 |---|---|---|---|---|---|
@@ -24,9 +28,9 @@ life domains, for **35 items** rated **1 (not true of me) → 10 (completely tru
 
 Scoring it this way reveals two things at once:
 
-- **Wheel of Life** — average each *row* to see which **life areas** carry or drain your authority.
-- **Capacity profile** — average each *column* to see which **capacities** are strong or weak everywhere.
-- The **heatmap** of all 35 cells pinpoints exactly where authority leaks out.
+- **Wheel of Life** — average each domain's statements to see which **life areas** carry or drain your authority.
+- **Capacity profile** — average each capacity's statements (across all domains) to see which **capacities** are strong or weak everywhere.
+- The **domain × capacity heatmap** pinpoints exactly where authority leaks out.
 
 ### Design grounding
 The instrument adapts wording and structure from validated self-report tools — the
