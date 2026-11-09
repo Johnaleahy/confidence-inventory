@@ -233,16 +233,15 @@ function renderStep() {
   updateSurveyNav();
 }
 
-function stepComplete(i) {
-  const d = DOMAINS[i];
-  const r = responses[d.id] || {};
-  return d.items.every((_, idx) => typeof r[idx] === 'number');
-}
-
 function updateSurveyNav() {
-  const ok = stepComplete(stepIndex);
-  document.getElementById('btn-next').disabled = !ok;
-  document.getElementById('survey-hint').style.visibility = ok ? 'hidden' : 'visible';
+  // Rating every statement is optional — Next is always available.
+  document.getElementById('btn-next').disabled = false;
+  const d = DOMAINS[stepIndex];
+  const r = responses[d.id] || {};
+  const answered = d.items.filter((_, i) => typeof r[i] === 'number').length;
+  const hint = document.getElementById('survey-hint');
+  hint.style.visibility = 'visible';
+  hint.textContent = `${answered} of ${d.items.length} rated — skip any you'd rather not answer.`;
 }
 
 /* ---------- Scoring ---------- */
@@ -253,28 +252,32 @@ function computeScores() {
 
   let total = 0, totalCount = 0;
   DOMAINS.forEach(d => {
-    let sum = 0;
+    let sum = 0, n = 0;
     d.items.forEach((it, i) => {
-      const v = responses[d.id][i];
-      sum += v;
+      const v = responses[d.id] && responses[d.id][i];
+      if (typeof v !== 'number') return; // skipped statement
+      sum += v; n++;
       total += v; totalCount++;
       pillarSum[it.c] += v; pillarCount[it.c]++;
     });
-    domainScores[d.id] = sum / d.items.length;
+    domainScores[d.id] = n ? sum / n : 0; // average of answered items only
   });
 
   const pillarScores = {};
   PILLARS.forEach(p => pillarScores[p.id] = pillarCount[p.id] ? pillarSum[p.id] / pillarCount[p.id] : 0);
-  const composite = total / totalCount;
+  const composite = totalCount ? total / totalCount : 0;
 
-  return { domainScores, pillarScores, composite };
+  return { domainScores, pillarScores, composite, totalCount };
 }
 
 // Average of one domain's items that are tagged to a given capacity (null if none).
 function cellAverage(domain, capacityId) {
   let sum = 0, n = 0;
   domain.items.forEach((it, i) => {
-    if (it.c === capacityId) { sum += responses[domain.id][i]; n++; }
+    if (it.c !== capacityId) return;
+    const v = responses[domain.id] && responses[domain.id][i];
+    if (typeof v !== 'number') return;
+    sum += v; n++;
   });
   return n ? sum / n : null;
 }
@@ -384,9 +387,12 @@ function insights(scores) {
   const pillarsSorted = PILLARS.map(p => ({ ...p, score: scores.pillarScores[p.id] })).sort((a, b) => b.score - a.score);
   const domainsSorted = DOMAINS.map(d => ({ ...d, score: scores.domainScores[d.id] })).sort((a, b) => b.score - a.score);
 
-  // individual statements (the most actionable signal)
+  // individual statements that were actually rated (the most actionable signal)
   const items = [];
-  DOMAINS.forEach(d => d.items.forEach((it, i) => items.push({ d, it, v: responses[d.id][i] })));
+  DOMAINS.forEach(d => d.items.forEach((it, i) => {
+    const v = responses[d.id] && responses[d.id][i];
+    if (typeof v === 'number') items.push({ d, it, v });
+  }));
   items.sort((a, b) => a.v - b.v);
   const weakest = items.slice(0, 3);
   const strongest = items.slice(-3).reverse();
@@ -413,6 +419,7 @@ function insights(scores) {
         </ul>
       </div>
     </div>
+    ${weakest.length ? `
     <div class="card" style="margin-top:22px">
       <h3 style="margin-top:0">Where to focus first</h3>
       <p style="margin-bottom:0;color:var(--muted)">
@@ -422,7 +429,7 @@ function insights(scores) {
         Pair it with your weakest overall capacity — <strong style="color:var(--text)">${lowPillar.name}</strong> —
         and pick one small, repeatable action for the next two weeks. Re-take this inventory monthly to watch the wheel round out.
       </p>
-    </div>
+    </div>` : ''}
   `;
 }
 
@@ -508,14 +515,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-start').addEventListener('click', startFresh);
 
   document.getElementById('btn-resume').addEventListener('click', () => {
-    // resume to first incomplete step, or results if all done
-    const firstIncomplete = DOMAINS.findIndex((_, i) => !stepComplete(i));
-    if (firstIncomplete === -1) { renderResults(); }
-    else { stepIndex = firstIncomplete; renderStep(); show('screen-survey'); }
+    // resume to wherever they left off
+    stepIndex = Math.min(stepIndex || 0, DOMAINS.length - 1);
+    renderStep();
+    show('screen-survey');
   });
 
   document.getElementById('btn-next').addEventListener('click', () => {
-    if (!stepComplete(stepIndex)) return;
     if (stepIndex === DOMAINS.length - 1) { save(); renderResults(); }
     else { stepIndex++; save(); renderStep(); }
   });
