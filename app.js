@@ -179,6 +179,16 @@ function show(screenId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/* ---------- Rating labels (shown as a live readout on each statement) ---------- */
+function ratingLabel(n) {
+  if (n <= 1) return 'Not true of me';
+  if (n <= 3) return 'Rarely true';
+  if (n <= 5) return 'Sometimes true';
+  if (n <= 7) return 'Often true';
+  if (n <= 9) return 'Usually true';
+  return 'Completely true of me';
+}
+
 /* ---------- Survey rendering ---------- */
 function renderStep() {
   const domain = DOMAINS[stepIndex];
@@ -204,7 +214,11 @@ function renderStep() {
       <div class="q">
         <p class="q-text">${it.t}</p>
         <div class="scale">${scaleBtns}</div>
-        <div class="scale-legend"><span>1 · Not true of me</span><span>Completely true · 10</span></div>
+        <div class="scale-legend"><span>1 · Not true of me</span><span class="hi">Completely true · 10</span></div>
+        <div class="q-current${current ? ' shown' : ''}">
+          <span class="num">${current || ''}</span>
+          <span class="lbl"><small>Your rating</small>${current ? ratingLabel(current) : ''}</span>
+        </div>
       </div>
     `;
   });
@@ -215,9 +229,16 @@ function renderStep() {
     btn.addEventListener('click', () => {
       const d = btn.dataset.domain, idx = parseInt(btn.dataset.idx, 10), v = parseInt(btn.dataset.value, 10);
       responses[d][idx] = v;
-      // update selection within this question's scale
-      btn.parentElement.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+      // update selection + live readout within this question's card
+      const card = btn.closest('.q');
+      card.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
+      const cur = card.querySelector('.q-current');
+      if (cur) {
+        cur.querySelector('.num').textContent = v;
+        cur.querySelector('.lbl').innerHTML = `<small>Your rating</small>${ratingLabel(v)}`;
+        cur.classList.add('shown');
+      }
       save();
       updateSurveyNav();
     });
@@ -320,11 +341,11 @@ function radarSVG(domainScores) {
     const r = R * v / 10;
     let pts = '';
     for (let i = 0; i < n; i++) { const [x, y] = point(i, r); pts += `${x},${y} `; }
-    rings += `<polygon points="${pts.trim()}" fill="none" stroke="#2a3644" stroke-width="1"/>`;
+    rings += `<polygon points="${pts.trim()}" fill="none" stroke="#e4e9f0" stroke-width="1"/>`;
   });
 
   let spokes = '';
-  for (let i = 0; i < n; i++) { const [x, y] = point(i, R); spokes += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#2a3644" stroke-width="1"/>`; }
+  for (let i = 0; i < n; i++) { const [x, y] = point(i, R); spokes += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e4e9f0" stroke-width="1"/>`; }
 
   let dataPts = '';
   const dots = [];
@@ -341,13 +362,13 @@ function radarSVG(domainScores) {
     let anchor = 'middle';
     if (x < cx - 8) anchor = 'end';
     else if (x > cx + 8) anchor = 'start';
-    labels += `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" fill="#93a4b5" font-size="11" font-family="sans-serif">${d.icon} ${d.name.split(' ')[0]}</text>`;
+    labels += `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" fill="#647389" font-size="11" font-family="sans-serif">${d.icon} ${d.name.split(' ')[0]}</text>`;
   });
 
   return `
   <svg class="radar" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Wheel of life scores by domain">
     ${rings}${spokes}
-    <polygon points="${dataPts.trim()}" fill="rgba(79,157,222,0.22)" stroke="#4f9dde" stroke-width="2"/>
+    <polygon points="${dataPts.trim()}" fill="rgba(37,99,235,0.14)" stroke="#2563eb" stroke-width="2"/>
     ${dots.join('')}${labels}
   </svg>`;
 }
